@@ -1,4 +1,4 @@
-CREATE type os AS ENUM ('Windows', 'Linux', 'MacOS');
+CREATE type "OS" AS ENUM ('Windows', 'Linux', 'MacOS');
 
 create table if not exists developers (
 	"id" serial primary key,
@@ -9,7 +9,7 @@ create table if not exists developers (
 create table if not exists developer_infos (
 	"id" serial primary key,
 	"developerSince" date not null,
-	"preferredOS" os not null,
+	"preferredOS" "OS" not null,
 	"developerId" integer unique not null,
 	foreign key("developerId") references developers("id") on delete cascade
 );
