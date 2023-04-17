@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "ts-node-dev --cls --rs --ignore-watch node_modules src/server.ts",
+    "test:database": "ts-node-dev configTestsDatabase.ts",
     "test": "jest --forceExit --runInBand"
   },
   "dependencies": {
