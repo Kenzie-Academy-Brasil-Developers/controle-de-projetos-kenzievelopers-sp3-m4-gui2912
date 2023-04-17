@@ -44,6 +44,6 @@ app.get("/projects/:id", ensureProjectExistsMiddleware, retrieveProject);
 app.patch("/projects/:id", ensureDevExistsMiddleware, ensureProjectExistsMiddleware, updateProject)
 app.delete("/projects/:id", ensureProjectExistsMiddleware, deleteProject)
 app.post("/projects/:id/technologies", ensureProjectExistsMiddleware, registerProjectTech)
-app.delete("/projects/:id/technologies", ensureProjectExistsMiddleware, deleteProjectTech)
+app.delete("/projects/:id/technologies/:name", ensureProjectExistsMiddleware, deleteProjectTech)
 
 export default app;

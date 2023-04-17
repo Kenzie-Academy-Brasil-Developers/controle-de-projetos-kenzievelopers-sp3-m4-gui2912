@@ -206,10 +206,10 @@ const registerProjectTech = async (
         queryConfigJoined
     );
 
-    if(tecRequest.name === queryResultJoined.rows[0].technologyName){
+    if (tecRequest.name === queryResultJoined.rows[0].technologyName) {
         return res.status(409).json({
-            message: 'This technology is already associated with the project'
-        })
+            message: "This technology is already associated with the project",
+        });
     }
 
     return res.status(201).json(queryResultJoined.rows[0]);
@@ -219,7 +219,47 @@ const deleteProjectTech = async (
     req: Request,
     res: Response
 ): Promise<Response> => {
-    return res.status(201).json();
+    const projectId: number = +req.params.id;
+    const name: string = req.params.name;
+
+    const querySelect: string = `
+    SELECT 
+      *
+    FROM
+      projects_technologies pt
+    WHERE
+      pt."projectId" = $1
+  `;
+
+    const querySelectConfig: QueryConfig = {
+        text: querySelect,
+        values: [projectId],
+    };
+
+    const querySelectResult: QueryResult = await client.query(
+        querySelectConfig
+    );
+    if (querySelectResult.rowCount === 0) {
+        return res.status(404).json({
+            message: `Technology ${name} not found on this Project.`,
+        });
+    }
+
+    const queryString: string = `
+    DELETE FROM
+      projects_technologies pt
+    WHERE
+      pt."projectId" = $1;
+  `;
+
+    const queryConfig: QueryConfig = {
+        text: queryString,
+        values: [querySelectResult.rows[0].id],
+    };
+
+    await client.query(queryConfig);
+
+    return res.status(204).json();
 };
 
 export {
