@@ -26,15 +26,16 @@ create table if not exists projects (
 	foreign key("developerId") references developers("id") on delete set null
 );
 
+create table if not exists technologies(
+	"id" serial primary key,
+	"name" varchar(30) not null
+);
+
 create table if not exists projects_technologies(
 	"id" serial primary key,
 	"addedIn" date not null,
 	"technologyId" integer not null,
 	"projectId" integer not null,
-	foreign key("technologyId") references 
+	foreign key("technologyId") references technologies("id")
 );	
 
-create table if not exists technologies(
-	"id" serial primary key,
-	"name" varchar(30) not null
-);
