@@ -18,6 +18,7 @@ import {
     ensureDevEmailIsUniqueMiddleware,
     ensureDevExistsMiddleware,
     ensureProjectExistsMiddleware,
+    ensureTechNameIsValidMiddleware,
 } from "./middlewares";
 
 const app: Application = express();
@@ -39,11 +40,26 @@ app.patch(
     updateDeveloper
 );
 
-app.post("/projects", ensureProjectExistsMiddleware, createProject);
+app.post("/projects", ensureDevExistsMiddleware, createProject);
 app.get("/projects/:id", ensureProjectExistsMiddleware, retrieveProject);
-app.patch("/projects/:id", ensureDevExistsMiddleware, ensureProjectExistsMiddleware, updateProject)
-app.delete("/projects/:id", ensureProjectExistsMiddleware, deleteProject)
-app.post("/projects/:id/technologies", ensureProjectExistsMiddleware, registerProjectTech)
-app.delete("/projects/:id/technologies/:name", ensureProjectExistsMiddleware, deleteProjectTech)
+app.patch(
+    "/projects/:id",
+    ensureProjectExistsMiddleware,
+    ensureDevExistsMiddleware,
+    updateProject
+);
+app.delete("/projects/:id", ensureProjectExistsMiddleware, deleteProject);
+app.post(
+    "/projects/:id/technologies",
+    ensureTechNameIsValidMiddleware,
+    ensureProjectExistsMiddleware,
+    registerProjectTech
+);
+app.delete(
+    "/projects/:id/technologies/:name",
+    ensureProjectExistsMiddleware,
+    ensureTechNameIsValidMiddleware,
+    deleteProjectTech
+);
 
 export default app;

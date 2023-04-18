@@ -9,6 +9,7 @@ const createProject = async (
     res: Response
 ): Promise<Response> => {
     const data: TProductRequest = req.body;
+
     const queryString: string = format(
         `
         INSERT INTO
@@ -62,7 +63,6 @@ const retrieveProject = async (
     const { rows }: QueryResult<iProductRetrieved> = await client.query(
         queryConfig
     );
-    console.log(rows);
 
     return res.status(200).json(rows);
 };
@@ -73,6 +73,28 @@ const updateProject = async (
 ): Promise<Response> => {
     const projectId: number = +req.params.id;
     const data: Partial<TProductRequest> = req.body;
+
+    const queryStringSelect: string = `
+    SELECT
+        *
+    FROM
+        developers d
+    WHERE
+        d.id = $1
+`;
+
+    const queryConfigSelect: QueryConfig = {
+        text: queryStringSelect,
+        values: [data.developerId],
+    };
+
+    const { rowCount }: QueryResult = await client.query(queryConfigSelect);
+
+    if (rowCount === 0) {
+        return res.status(404).json({
+            message: "Developer not found.",
+        });
+    }
 
     const queryString: string = format(
         `
@@ -128,57 +150,46 @@ const registerProjectTech = async (
     const projectId: number = +req.params.id;
     const tecRequest = req.body;
 
-    const querySelect = `
-    SELECT 
-      t."id"
-    FROM
-      technologies AS t
-    WHERE t."name" = $1;
-  `;
+    const queryStringSelect:string = `
+        SELECT
+            *
+        FROM
+            projects_technologies pt    
+        WHERE
+            pt."projectId" = $1;
+    `
 
-    const querySelectConfig: QueryConfig = {
-        text: querySelect,
-        values: [tecRequest.name],
-    };
-
-    const { rowCount, rows }: QueryResult = await client.query(
-        querySelectConfig
-    );
-
-    if (rowCount === 0) {
-        return res.status(400).json({
-            message: "Technology not supported.",
-            options: [
-                "JavaScript",
-                "Python",
-                "React",
-                "Express.js",
-                "HTML",
-                "CSS",
-                "Django",
-                "PostgreSQL",
-                "MongoDB",
-            ],
-        });
+    const queryConfigSelect:QueryConfig = {
+        text: queryStringSelect,
+        values: [projectId]
     }
+
+    const queryResultSelect:QueryResult = await client.query(queryConfigSelect)
+
+    if(queryResultSelect.rowCount > 0){
+        return res.status(409).json({
+            message: "This technology is already associated with the project"
+        })
+    }
+    
 
     const queryString: string = `
     INSERT INTO 
         projects_technologies ("addedIn", "projectId", "technologyId")
     VALUES (now(), $1, $2)
-        RETURNING *;
+    RETURNING *;
   `;
 
     const queryConfig: QueryConfig = {
         text: queryString,
-        values: [projectId, rows[0].id],
+        values: [projectId, res.locals.techFinded.id],
     };
 
-    await client.query(queryConfig);
+    const queryResult: QueryResult = await client.query(queryConfig);
 
     const queryStringJoined: string = `
     SELECT 
-      t."id" AS "technologyId",
+      pt."technologyId",
       t."name" AS "technologyName",
       p."id" AS "projectId",
       p."name" AS "projectName",
@@ -190,9 +201,9 @@ const registerProjectTech = async (
     FROM
       projects_technologies pt
     FULL OUTER JOIN
-      projects p ON pt."projectId" = p."id"
-    FULL OUTER JOIN
       technologies t ON pt."technologyId" = t."id"
+    FULL OUTER JOIN
+      projects p ON pt."projectId" = p."id"
     WHERE
       pt."projectId" = $1;
   `;
@@ -204,13 +215,7 @@ const registerProjectTech = async (
 
     const queryResultJoined: QueryResult = await client.query(
         queryConfigJoined
-    );
-
-    if (tecRequest.name === queryResultJoined.rows[0].technologyName) {
-        return res.status(409).json({
-            message: "This technology is already associated with the project",
-        });
-    }
+    )
 
     return res.status(201).json(queryResultJoined.rows[0]);
 };
@@ -240,7 +245,7 @@ const deleteProjectTech = async (
         querySelectConfig
     );
     if (querySelectResult.rowCount === 0) {
-        return res.status(404).json({
+        return res.status(400).json({
             message: `Technology ${name} not found on this Project.`,
         });
     }

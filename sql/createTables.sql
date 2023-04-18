@@ -36,6 +36,10 @@ create table if not exists projects_technologies(
 	"addedIn" date not null,
 	"technologyId" integer not null,
 	"projectId" integer not null,
-	foreign key("technologyId") references technologies("id")
+	foreign key("technologyId") references technologies("id") on delete cascade,
+	foreign key("projectId") references projects("id") on delete cascade
 );	
+
+insert into technologies("name") values ('JavaScript'), ('Python'), ('React'), ('Express.js'), ('HTML'), ('CSS'), ('Django'), ('PostgreSQL'), ('MongoDB')
+;
 

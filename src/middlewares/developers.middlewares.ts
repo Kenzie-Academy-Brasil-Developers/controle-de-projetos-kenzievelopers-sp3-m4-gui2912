@@ -44,33 +44,32 @@ const ensureDevExistsMiddleware = async (
     res: Response,
     next: NextFunction
 ): Promise<void | Response> => {
-    const id: number = +req.params.id || req.body.developerId;
-    console.log(id);
+    const id: number = +req.params.id || +req.body.developerId;
     
+    if (id) {
+        const queryString: string = `
+            SELECT
+                *
+            FROM
+                developers d
+            WHERE
+                d.id = $1
+        `;
 
-    const queryString: string = `
-        SELECT
-            *
-        FROM
-            developers d
-        WHERE
-            d.id = $1
-    `;
+        const queryConfig: QueryConfig = {
+            text: queryString,
+            values: [id],
+        };
 
-    const queryConfig: QueryConfig = {
-        text: queryString,
-        values: [id],
-    };
-
-    const { rowCount }: QueryResult = await client.query(queryConfig);
-
-    if (rowCount === 0) {
-        return res.status(404).json({
-            message: "Developer not found.",
-        });
+        const { rowCount }: QueryResult = await client.query(queryConfig);
+        if (rowCount === 0) {
+            return res.status(404).json({
+                message: "Developer not found.",
+            });
+        }
     }
 
-    return next()
+    return next();
 };
 
 export { ensureDevEmailIsUniqueMiddleware, ensureDevExistsMiddleware };
