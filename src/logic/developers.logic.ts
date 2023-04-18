@@ -96,7 +96,6 @@ const createDeveloperInfo = async (
         const devId: number = +req.params.id;
 
         const infoDataValues = Object.values(data);
-        console.log(infoDataValues);
 
         const enumPrefOS: string[] = ["MacOS", "Windows", "Linux"];
         const ensurePrefOS = enumPrefOS.some((elt: any) =>
@@ -131,7 +130,6 @@ const createDeveloperInfo = async (
 
         return res.status(201).json(rows[0]);
     } catch (error: any) {
-        console.log(error.constraint);
         if (error.constraint === "developer_infos_developerId_key") {
             return res.status(409).json({
                 message: "Developer infos already exists.",
